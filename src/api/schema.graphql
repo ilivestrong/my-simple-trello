@@ -1,0 +1,23 @@
+type Query {
+ lists: [List!]
+}
+
+type Mutation {
+  createList(title: String!): List
+  createTask(title: String!, listID: Int!): Task
+  updateTask(title: String!, status: Boolean!, taskID: Int!): Task
+  moveTask(taskID: Int!, newPosition: Int!): Task
+}
+
+type List {
+  id: ID!
+  title: String!
+  tasks: [Task!]!
+}
+
+type Task {
+     id: ID!
+     title: String!
+     completed: Boolean
+     pos: Int!
+}
