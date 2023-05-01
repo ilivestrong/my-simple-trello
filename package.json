@@ -1,0 +1,16 @@
+{
+  "name": "my-simple-trello",
+  "version": "1.0.0",
+  "description": "This is a simple task creation api",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "apollo-server": "^3.12.0",
+    "graphql": "^16.6.0"
+  }
+}
