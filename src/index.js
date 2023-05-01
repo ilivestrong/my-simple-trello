@@ -1,16 +1,24 @@
-const fs = require("fs")
-const path = require("path")
-const {
+import * as fs from "fs"
+import * as path from "path"
+import {
+  fileURLToPath
+} from 'url';
+import {
   ApolloServer
-} = require("apollo-server")
-const {
+} from "apollo-server"
+import {
   Mutation,
   Query
-} = require("./api/resolvers")
+} from "./api/resolvers/index.js"
+
+
 const resolvers = {
   Mutation,
   Query,
 }
+const __filename = fileURLToPath(
+  import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const server = new ApolloServer({
   typeDefs: fs.readFileSync(

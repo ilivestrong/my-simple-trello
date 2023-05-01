@@ -1,5 +1,1 @@
-function lists(parent, args, context) {}
-
-module.exports = {
-    lists
-}
+export function lists(parent, args, context) {}
