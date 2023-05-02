@@ -20,9 +20,12 @@ const server = new ApolloServer({
   context: {
     prisma,
   }
-})
-
+})  
 
 server
   .listen()
   .then(({ url}) => console.log(`trello server running at: ${url}`))
+  .catch(async (err) => {
+    console.log(`shutting down server, reason: ${err}`)
+    await prisma.$disconnect();
+  })

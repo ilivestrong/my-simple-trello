@@ -67,5 +67,116 @@ export async function createTask(parent, {title, listID}, { prisma }) {
     });
   }
 }
-export function updateTask(parent, args, context) {}
-export function moveTask(parent, args, context) {}
+export async function updateTask(parent, {title, completed, taskID}, {prisma}) {
+  if (title.trim()  == "") {
+    throw new GraphQLError('title is required', {
+      extensions: {
+        code: 'BAD_REQIEST',
+        http: {
+          code: 400
+        },
+      },
+    });
+  }
+
+  try {
+    return await prisma.task.update({
+      where: {
+        id: taskID,
+      },
+      data: {
+        title,
+        completed,
+      }
+    })    
+  } catch (err) {
+    if (err.code === ErrCodeRequiredFieldNotFound) {
+      throw new GraphQLError(`taskID not found in db: ${taskID}`, {
+        extensions: {
+          code: 'NOT_FOUND',
+          http: {
+            status: 404,
+          },
+        },
+      });
+    }
+    throw new GraphQLError(`internal server error on: ${err.meta.target.join(",")}`, {
+      extensions: {
+        code: 'INTERNAL_ERROR',
+        http: {
+          status: 500,
+        },
+      },
+    });
+  }
+}
+export async function moveTask(parent, {taskID, listID, newPosition}, {prisma}) {
+  try {
+    const tasks = await prisma.task.findMany({
+      where: {
+        listId: listID,
+      }
+    })
+
+    if (tasks.length <= 1 && newPosition > 1) {
+      throw new GraphQLError('new position for task is invalid', {
+        extensions: {
+          code: 'BAD_REQUEST',
+          http: {
+            status: 400,
+          },
+        },
+      });
+    }
+
+    const existingTaskWithNewPos = tasks.find((task) => task.position == newPosition)
+    const taskTobeUpdated = tasks.find((task) => task.id == taskID)
+
+    return await prisma.$transaction(async(tx) => {
+      await tx.task.update({
+        where: {
+          id: existingTaskWithNewPos.id,
+        },
+        data: {
+         position: taskTobeUpdated.position
+        }
+      });
+
+      await tx.task.update({
+        where: {
+          id: taskID,
+        },
+        data: {
+         position: newPosition,
+        }
+      });
+
+      return tx.task.findMany({
+        where: {
+          listId: listID,
+        }
+      });
+    })
+  } catch (err) {
+    console.log(err)
+    await prisma.$disconnect();
+    if (err.code === ErrCodeRequiredFieldNotFound) {
+      throw new GraphQLError(`taskID not found in db: ${taskID}`, {
+        extensions: {
+          code: 'NOT_FOUND',
+          http: {
+            status: 404,
+          },
+        },
+      });
+    }
+    throw new GraphQLError(`internal server error on: ${err.meta.target.join(",")}`, {
+      extensions: {
+        code: 'INTERNAL_ERROR',
+        http: {
+          status: 500,
+        },
+      },
+    });
+  }
+}
