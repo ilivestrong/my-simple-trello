@@ -12,7 +12,7 @@ type Mutation {
 type List {
   id: ID!
   title: String!
-  tasks: [Task!]!
+  tasks: [Task!]
 }
 
 type Task {
@@ -20,4 +20,5 @@ type Task {
      title: String!
      completed: Boolean
      position: Int!
+     list: List
 }

@@ -6,13 +6,31 @@ const ErrCodeRequiredFieldNotFound = "P2025"
 
 export async function createList(parent, {title}, {prisma}) {
   try {
+    if (title.trim()  == "") {
+      throw new GraphQLError('title is required', {
+        extensions: {
+          code: 'BAD_REQIEST',
+          http: {
+            code: 400
+          },
+        },
+      });
+    }
+    
     return await prisma.list.create({
       data: {
         title,
       }
     })
   } catch (err) {
-
+    throw new GraphQLError(`internal server error: ${err.message}`, {
+      extensions: {
+        code: 'INTERNAL_ERROR',
+        http: {
+          status: 500,
+        },
+      },
+    });
   }
 }
 export async function createTask(parent, {title, listID}, { prisma }) {
