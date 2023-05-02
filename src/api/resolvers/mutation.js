@@ -118,7 +118,11 @@ export async function moveTask(parent, {taskID, listID, newPosition}, {prisma}) 
       }
     })
 
-    if (tasks.length <= 1 && newPosition > 1) {
+    if ((tasks.length == 1 && newPosition > 1) 
+        || (tasks.length == 0) 
+        || (tasks.length > 1 && newPosition > tasks.length)
+       )
+    {
       throw new GraphQLError('new position for task is invalid', {
         extensions: {
           code: 'BAD_REQUEST',
@@ -131,6 +135,16 @@ export async function moveTask(parent, {taskID, listID, newPosition}, {prisma}) 
 
     const existingTaskWithNewPos = tasks.find((task) => task.position == newPosition)
     const taskTobeUpdated = tasks.find((task) => task.id == taskID)
+    if (existingTaskWithNewPos == undefined || taskTobeUpdated == undefined) {
+        throw new GraphQLError('invalid operation - aborted', {
+          extensions: {
+              code: 'BAD_REQUEST',
+              http: {
+                status: 400,
+              },
+          },
+      });
+    }
 
     return await prisma.$transaction(async(tx) => {
       await tx.task.update({
@@ -138,18 +152,19 @@ export async function moveTask(parent, {taskID, listID, newPosition}, {prisma}) 
           id: existingTaskWithNewPos.id,
         },
         data: {
-         position: taskTobeUpdated.position
+          position: taskTobeUpdated.position
         }
       });
-
+    
       await tx.task.update({
         where: {
           id: taskID,
         },
         data: {
-         position: newPosition,
+          position: newPosition,
         }
       });
+      
 
       return tx.task.findMany({
         where: {
@@ -158,7 +173,6 @@ export async function moveTask(parent, {taskID, listID, newPosition}, {prisma}) 
       });
     })
   } catch (err) {
-    console.log(err)
     await prisma.$disconnect();
     if (err.code === ErrCodeRequiredFieldNotFound) {
       throw new GraphQLError(`taskID not found in db: ${taskID}`, {
@@ -170,7 +184,7 @@ export async function moveTask(parent, {taskID, listID, newPosition}, {prisma}) 
         },
       });
     }
-    throw new GraphQLError(`internal server error on: ${err.meta.target.join(",")}`, {
+    throw new GraphQLError(`internal server error: ${err.message}`, {
       extensions: {
         code: 'INTERNAL_ERROR',
         http: {
