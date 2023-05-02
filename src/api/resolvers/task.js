@@ -1,5 +1,5 @@
 export async function tasks(parent, args, context) {
-    const tasks = await context.prisma.task.findMany({
+    return await context.prisma.task.findMany({
         where: {
             listId: parent.id
         },
@@ -7,5 +7,4 @@ export async function tasks(parent, args, context) {
             position: 'desc',
         },
     })
-    return tasks
 }
