@@ -19,5 +19,5 @@ type Task {
      id: ID!
      title: String!
      completed: Boolean
-     pos: Int!
+     position: Int!
 }

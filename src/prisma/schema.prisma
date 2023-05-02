@@ -21,6 +21,7 @@ model Task {
   id        Int      @id @default(autoincrement())
   title     String
   completed Boolean
+  position  Int
   createdAt DateTime @default(now())
   list      List?    @relation(fields: [listId], references: [id])
   listId    Int?
