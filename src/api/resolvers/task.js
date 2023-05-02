@@ -1,3 +1,11 @@
-export function tasks(parent, args, context) {
-    return context.prisma.list.findUnique({ where: { id: parent.id } }).tasks()
- }
+export async function tasks(parent, args, context) {
+    const tasks = await context.prisma.task.findMany({
+        where: {
+            listId: parent.id
+        },
+        orderBy: {
+            position: 'desc',
+        },
+    })
+    return tasks
+}
