@@ -5,7 +5,7 @@ type Query {
 type Mutation {
   createList(title: String!): List
   createTask(title: String!, listID: Int!): Task
-  updateTask(title: String!, status: Boolean!, taskID: Int!): Task
+  updateTask(title: String!, status: Boolean=false, taskID: Int!): Task
   moveTask(taskID: Int!, newPosition: Int!): Task
 }
 
