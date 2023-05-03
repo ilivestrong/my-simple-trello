@@ -1,5 +1,5 @@
 type Query {
- lists: [List!]
+ lists(skip: Int, take: Int): [List!]
 }
 
 type Mutation {

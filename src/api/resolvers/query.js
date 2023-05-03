@@ -1,3 +1,6 @@
-export function lists(parent, args, context) {
-   return context.prisma.list.findMany()
+export function lists(parent, {skip, take}, context) {
+   return context.prisma.list.findMany({
+      skip,
+      take,
+   })
 }
