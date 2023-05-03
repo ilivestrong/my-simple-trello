@@ -1,5 +1,5 @@
 type Query {
- lists(skip: Int, take: Int): [List!]
+ lists(input: PaginateInfo): [List!]
 }
 
 type Mutation {
@@ -21,4 +21,9 @@ type Task {
      completed: Boolean
      position: Int!
      list: List
+}
+
+input PaginateInfo {
+  skip: Int
+  take: Int
 }
