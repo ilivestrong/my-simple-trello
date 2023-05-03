@@ -4,10 +4,10 @@ import {
 
 const ErrCodeRequiredFieldNotFound = "P2025"
 
-export async function createList(parent, {title}, {prisma}) {
+export async function createList(parent, { title }, { prisma }) {
   try {
-    if (title.trim()  == "") {
-      throw new GraphQLError('title is required', {
+    if (title.trim() == "") {
+      return new GraphQLError('title is required', {
         extensions: {
           code: 'BAD_REQIEST',
           http: {
@@ -16,14 +16,14 @@ export async function createList(parent, {title}, {prisma}) {
         },
       });
     }
-    
+
     return await prisma.list.create({
       data: {
         title,
       }
     })
   } catch (err) {
-    throw new GraphQLError(`internal server error: ${err.message}`, {
+    return new GraphQLError(`internal server error: ${err.message}`, {
       extensions: {
         code: 'INTERNAL_ERROR',
         http: {
@@ -33,9 +33,9 @@ export async function createList(parent, {title}, {prisma}) {
     });
   }
 }
-export async function createTask(parent, {title, listID}, { prisma }) {
-  if (title.trim()  == "") {
-    throw new GraphQLError('title is required', {
+export async function createTask(parent, { title, listID }, { prisma }) {
+  if (title.trim() == "") {
+    return new GraphQLError('title is required', {
       extensions: {
         code: 'BAD_REQIEST',
         http: {
@@ -66,7 +66,7 @@ export async function createTask(parent, {title, listID}, { prisma }) {
     })
   } catch (err) {
     if (err.code === ErrCodeRequiredFieldNotFound) {
-      throw new GraphQLError(`listID not found in db: ${listID}`, {
+      return new GraphQLError(`listID not found in db: ${listID}`, {
         extensions: {
           code: 'NOT_FOUND',
           http: {
@@ -75,7 +75,7 @@ export async function createTask(parent, {title, listID}, { prisma }) {
         },
       });
     }
-    throw new GraphQLError(`internal server error on: ${err.meta.target.join(",")}`, {
+    return new GraphQLError(`internal server error on: ${err.meta.target.join(",")}`, {
       extensions: {
         code: 'INTERNAL_ERROR',
         http: {
@@ -85,9 +85,10 @@ export async function createTask(parent, {title, listID}, { prisma }) {
     });
   }
 }
-export async function updateTask(parent, {title, completed, taskID}, {prisma}) {
-  if (title.trim()  == "") {
-    throw new GraphQLError('title is required', {
+
+export async function updateTask(parent, { title, completed, taskID }, { prisma }) {
+  if (title.trim() == "") {
+    return new GraphQLError('title is required', {
       extensions: {
         code: 'BAD_REQIEST',
         http: {
@@ -106,10 +107,10 @@ export async function updateTask(parent, {title, completed, taskID}, {prisma}) {
         title,
         completed,
       }
-    })    
+    })
   } catch (err) {
     if (err.code === ErrCodeRequiredFieldNotFound) {
-      throw new GraphQLError(`taskID not found in db: ${taskID}`, {
+      return new GraphQLError(`taskID not found in db: ${taskID}`, {
         extensions: {
           code: 'NOT_FOUND',
           http: {
@@ -118,7 +119,7 @@ export async function updateTask(parent, {title, completed, taskID}, {prisma}) {
         },
       });
     }
-    throw new GraphQLError(`internal server error on: ${err.meta.target.join(",")}`, {
+    return new GraphQLError(`internal server error on: ${err.meta.target.join(",")}`, {
       extensions: {
         code: 'INTERNAL_ERROR',
         http: {
@@ -128,7 +129,7 @@ export async function updateTask(parent, {title, completed, taskID}, {prisma}) {
     });
   }
 }
-export async function moveTask(parent, {taskID, listID, newPosition}, {prisma}) {
+export async function moveTask(parent, { taskID, listID, newPosition }, { prisma }) {
   try {
     const tasks = await prisma.task.findMany({
       where: {
@@ -136,12 +137,11 @@ export async function moveTask(parent, {taskID, listID, newPosition}, {prisma}) 
       }
     })
 
-    if ((tasks.length == 1 && newPosition > 1) 
-        || (tasks.length == 0) 
-        || (tasks.length > 1 && newPosition > tasks.length)
-       )
-    {
-      throw new GraphQLError('new position for task is invalid', {
+    if ((tasks.length == 1 && newPosition > 1)
+      || (tasks.length == 0)
+      || (tasks.length > 1 && newPosition > tasks.length)
+    ) {
+      return new GraphQLError('new position for task is invalid', {
         extensions: {
           code: 'BAD_REQUEST',
           http: {
@@ -154,17 +154,17 @@ export async function moveTask(parent, {taskID, listID, newPosition}, {prisma}) 
     const existingTaskWithNewPos = tasks.find((task) => task.position == newPosition)
     const taskTobeUpdated = tasks.find((task) => task.id == taskID)
     if (existingTaskWithNewPos == undefined || taskTobeUpdated == undefined) {
-        throw new GraphQLError('invalid operation - aborted', {
-          extensions: {
-              code: 'BAD_REQUEST',
-              http: {
-                status: 400,
-              },
+      return new GraphQLError('invalid operation - aborted', {
+        extensions: {
+          code: 'BAD_REQUEST',
+          http: {
+            status: 400,
           },
+        },
       });
     }
 
-    return await prisma.$transaction(async(tx) => {
+    return await prisma.$transaction(async (tx) => {
       await tx.task.update({
         where: {
           id: existingTaskWithNewPos.id,
@@ -173,7 +173,7 @@ export async function moveTask(parent, {taskID, listID, newPosition}, {prisma}) 
           position: taskTobeUpdated.position
         }
       });
-    
+
       await tx.task.update({
         where: {
           id: taskID,
@@ -182,7 +182,7 @@ export async function moveTask(parent, {taskID, listID, newPosition}, {prisma}) 
           position: newPosition,
         }
       });
-      
+
 
       return tx.task.findMany({
         where: {
@@ -193,7 +193,7 @@ export async function moveTask(parent, {taskID, listID, newPosition}, {prisma}) 
   } catch (err) {
     await prisma.$disconnect();
     if (err.code === ErrCodeRequiredFieldNotFound) {
-      throw new GraphQLError(`taskID not found in db: ${taskID}`, {
+      return new GraphQLError(`taskID not found in db: ${taskID}`, {
         extensions: {
           code: 'NOT_FOUND',
           http: {
@@ -202,7 +202,7 @@ export async function moveTask(parent, {taskID, listID, newPosition}, {prisma}) 
         },
       });
     }
-    throw new GraphQLError(`internal server error: ${err.message}`, {
+    return new GraphQLError(`internal server error: ${err.message}`, {
       extensions: {
         code: 'INTERNAL_ERROR',
         http: {
