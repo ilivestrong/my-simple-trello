@@ -12,7 +12,7 @@ import {
 jest.mock('@prisma/client', () => {
     const mockClient = {
         list: {
-            findMany: jest.fn(),
+            create: jest.fn(),
         },
     };
     return {
@@ -35,5 +35,12 @@ describe('createList()', () => {
         const args = { title: "" }
         const result = await createList({}, args, { prisma: {} });
         expect(result).toEqual(new GraphQLError('title is required'));
+    });
+
+    it('should create a new list', async () => {
+        const args = { title: "My Todo list" }
+        const ctx = { prisma }
+        const result = await createList({}, args, ctx);
+        expect(prisma.list.create).toHaveBeenCalled()
     });
 });
