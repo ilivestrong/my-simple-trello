@@ -1,16 +1,8 @@
-import * as fs from "fs"
-import * as path from "path"
-import { fileURLToPath } from 'url';
 import { ApolloServer } from "apollo-server"
 import { PrismaClient } from "@prisma/client"
-import { Mutation, Query, List, Task } from "./api/resolvers/index.js"
 import schema from './api/models/Schema.js'
 
-const resolvers = { Mutation, Query, List, Task }
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 const prisma = new PrismaClient({ errorFormat: 'pretty' })
-
 const typeDefs = `
       type Query {
         lists(input: PaginateInfo): [List!]
