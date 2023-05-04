@@ -2,7 +2,7 @@ import {
   GraphQLError
 } from 'graphql';
 
-const ErrCodeRequiredFieldNotFound = "P2025"
+export const ErrCodeRequiredFieldNotFound = "P2025"
 
 export async function createList(parent, { title }, { prisma }) {
   try {
@@ -45,13 +45,13 @@ export async function createTask(parent, { title, listID }, { prisma }) {
     });
   }
 
-  const listTasksCount = await prisma.task.count({
-    where: {
-      listId: listID,
-    }
-  })
-
   try {
+    const listTasksCount = await prisma.task.count({
+      where: {
+        listId: listID,
+      }
+    })
+
     return await prisma.task.create({
       data: {
         title,

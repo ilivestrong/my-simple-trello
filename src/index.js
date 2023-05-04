@@ -9,7 +9,7 @@ import schema from './api/models/Schema.js'
 const resolvers = { Mutation, Query, List, Task }
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const prisma = new PrismaClient()
+const prisma = new PrismaClient({ errorFormat: 'pretty' })
 
 const typeDefs = `
       type Query {

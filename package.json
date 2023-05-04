@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "init": "npm install && npx prisma generate --schema=./src/prisma/schema.prisma",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "test": "jest --verbose"
   },
   "keywords": [],
   "author": "",
