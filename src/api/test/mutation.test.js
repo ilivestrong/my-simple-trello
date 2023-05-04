@@ -2,6 +2,7 @@ import {
     createList,
     createTask,
     ErrCodeRequiredFieldNotFound,
+    moveTask,
     updateTask
 } from "../resolvers/mutation";
 import {
@@ -20,8 +21,12 @@ jest.mock('@prisma/client', () => {
             create: jest.fn(),
             update: jest.fn(),
             count: jest.fn(),
+            findMany: jest.fn(),
         },
+        $transaction: jest.fn(),
+        $disconnect: jest.fn(),
     };
+
     return {
         PrismaClient: jest.fn(() => mockClient),
     };
@@ -347,3 +352,129 @@ describe('updateTask()', () => {
         expect(result).toEqual(expected);
     });
 });
+
+describe('moveTask()', () => {
+    let prisma;
+    const mockTasks = [{
+        id: 1,
+        title: "Grocery shopping",
+        completed: false,
+        position: 1,
+    },
+    {
+        id: 2,
+        title: "Buy gym equipment",
+        completed: true,
+        position: 2,
+    },
+    {
+        id: 3,
+        title: "Daily diary writing",
+        completed: false,
+        position: 3,
+    }
+    ]
+
+    beforeEach(() => {
+        prisma = new PrismaClient();
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it('should return GraphQLError when input is incorrect', async () => {
+        const ctx = {
+            prisma
+        }
+        const taskArgs = {
+            taskID: 1,
+            listID: 1,
+            newPosition: 4,
+        }
+        prisma.task.findMany.mockResolvedValue(mockTasks)
+
+        const result = await moveTask({}, taskArgs, ctx);
+        expect(result).toEqual(new GraphQLError('new position for task is invalid'));
+    });
+
+    it('should move a task to new position with correct input', async () => {
+        const ctx = {
+            prisma
+        }
+        const taskArgs = {
+            taskID: 1,
+            listID: 1,
+            newPosition: 2,
+        }
+        prisma.task.findMany.mockResolvedValue(mockTasks)
+        prisma.$transaction.mockImplementation(async () => { });
+
+        await moveTask({}, taskArgs, ctx);
+        expect(prisma.$transaction).toHaveBeenCalledTimes(1)
+    });
+
+    it('should return GraphQLError when taskID not found', async () => {
+        const ctx = {
+            prisma
+        }
+        const taskArgs = {
+            taskID: 1,
+            listID: 1,
+            newPosition: 2,
+        }
+        prisma.task.findMany.mockResolvedValue(mockTasks)
+        prisma.$transaction.mockImplementation(() => {
+            const errorNotFound = new Error('not found');
+            errorNotFound.code = ErrCodeRequiredFieldNotFound
+            throw errorNotFound
+        });
+        const expected = new GraphQLError(`taskID not found in db: ${taskArgs.taskID}`, {
+            extensions: {
+                code: 'NOT_FOUND',
+                http: {
+                    status: 404,
+                },
+            },
+        });
+
+
+        const result = await moveTask({}, taskArgs, ctx);
+
+        expect(result).toEqual(expected);
+    });
+
+    it('should return GraphQLError when internal error encountered', async () => {
+        const ctx = {
+            prisma
+        }
+        const taskArgs = {
+            taskID: 1,
+            listID: 1,
+            newPosition: 2,
+        }
+        prisma.task.findMany.mockResolvedValue(mockTasks)
+        prisma.$transaction.mockImplementation(() => {
+            const internalError = new Error('internal error');
+            internalError.code = "P2021"
+            internalError.meta = {
+                target: ["some field"]
+            }
+            throw internalError
+        });
+        const expected = new GraphQLError(`internal server error: internal error`, {
+            extensions: {
+                code: 'INTERNAL_ERROR',
+                http: {
+                    status: 500,
+                },
+            },
+        });
+
+        const result = await moveTask({}, taskArgs, ctx);
+
+        expect(result).toEqual(expected);
+    });
+});
+
+
