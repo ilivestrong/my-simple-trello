@@ -1,6 +1,5 @@
 # my-simple-trello
-GraphQL APIs assessment test for BRIKL. This GraphQL server is built using Apollo Server implementation.  
-#### *NOTE*: Unit tests are included in this repo, but due to shortage of time, integration tests weren't.  
+This GraphQL server is built using Apollo Server implementation.  
 
 
 ## Steps to run
